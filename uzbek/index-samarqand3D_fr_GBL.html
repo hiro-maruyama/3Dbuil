@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title> Bishkek buildings in 3D</title>
+  <meta property="og:description" content="Use extrusions to display buildings' height in 3D." />
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css' />
+  <script src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js'></script>
+<!--
+<style>
+      body { margin: 0; padding: 0; }
+      html, body, #map { height: 100%; }
+  </style> -->
+</head>
+<body>
+ <!---   <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; } -->
+    <style>
+        .map-overlay {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            width: 150px;
+            line-height:1;
+            top: 0;
+            left: 0;
+            padding: 10px;
+            background-color: aliceblue;
+        }
+
+        .map-overlay fieldset {
+            border: none;
+            padding: 0;
+            margin: 0 0 10px;
+        }
+
+    </style>
+
+<div id="map" style="height: 100vh"></div>>
+<!-- <div id="map"></div> -->
+<div class="map-overlay">
+    <fieldset>
+        <label for="transparency">Set transparency</label>
+        <p id="transparencyValue"></p>
+        <input type="range" id="transparency" name="transparency" 
+               min="0" max="10" step="1" value="10" />
+    </fieldset> 
+</div>
+<script>
+var zopacity=1;
+const transparencyValueSpan = document.getElementById('transparencyValue');
+const transparencyInput = document.getElementById('transparency');
+transparencyValueSpan.innerHTML =`${transparencyInput.value / 10} `;
+
+// const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
+const MAPTILER_KEY = 'fh40KwnIDXcNE7AwKtkT';
+const map = new maplibregl.Map({
+    style: `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`,
+//     center: [-74.0066, 40.7135],     
+//     center: [140.1270,36.0478 ],
+    center:[66.976,39.62], 
+    zoom: 15,
+    pitch: 55,
+    bearing: 0, //-17.6,
+    container: 'map',
+    antialias: true
+});
+
+// The 'building' layer in the streets vector source contains building-height
+// data from OpenStreetMap.
+map.on('load', () => {
+    // Insert the layer beneath any symbol layer.
+    const layers = map.getStyle().layers;
+
+/*    map.addSource('openmaptiles', {
+        url: `https://api.maptiler.com/tiles/v3-openmaptiles/tiles.json?key=${MAPTILER_KEY}`,
+//          url: `https://api.maptiler.com/tiles/v2/tiles.json?key=${MAPTILER_KEY}`,
+       
+        type: 'vector',
+    }); */
+
+    map.addSource('samarqand_cityBuild', {
+        'type':'geojson',
+        'data': `${location.href.replace('index-samarqand3D_fr_GBL.html','')}samarqand_city_latlon.geojson`,
+        'attribution':'<a href="https://essd.copernicus.org/articles/17/6647/2025/" target="_blank">(c) Global Building Atlas</a>',
+    }); 
+
+    map.addLayer(
+        {
+            'id': 'z_city-distance',
+            'source': 'samarqand_cityBuild',
+ /*           'source-layer': '',
+            'type': 'fill',
+            'paint': {
+                'fill-color': '#FF0',
+            }, */
+            'type': 'fill-extrusion',
+            'paint': {
+//                'fill-extrusion-color': ['get', 'color'],
+                'fill-extrusion-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'height'],
+                0, 
+                '#ffffff',
+                10,
+                '#ffcccc',
+                20,
+                '#ffaaaa',
+                30,
+                '#ff8888',
+                50,
+                '#ff6666',
+                80,
+                '#ff0000',
+                ],
+            
+ //               'fill-extrusion-opacity': 0.7,
+                'fill-extrusion-opacity': zopacity,               
+                'fill-extrusion-height': ['get', 'height'],
+            },
+
+        },
+    );
+//     console.log(layer.length)
+
+
+});
+
+
+
+
+
+
+transparencyInput.addEventListener('change', (e) => {
+    transparencyValueSpan.innerHTML =`${transparencyInput.value / 10} `;
+    zopacity=parseFloat(transparencyInput.value/10);
+    map.setPaintProperty('z_city-distance','fill-extrusion-opacity',zopacity);
+    },
+);
+
+</script>
+</body>
+</html>
