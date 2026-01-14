@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title> Bishkek buildings in 3D</title>
+  <title> Samarqand buildings in 3D</title>
   <meta property="og:description" content="Use extrusions to display buildings' height in 3D." />
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -46,12 +46,27 @@
         <input type="range" id="transparency" name="transparency" 
                min="0" max="10" step="1" value="10" />
     </fieldset> 
+    <!-- exaggeration -->
+    <fieldset>
+        <label for="exaggeration">Height Exaggeration</label>
+        <p id="exaggerationValue"></p>
+        <input type="range" id="exaggeration" name="exaggeration" 
+               min="1" max="50" step="1" value="10" />
+    </fieldset>
+
 </div>
 <script>
 var zopacity=1;
 const transparencyValueSpan = document.getElementById('transparencyValue');
 const transparencyInput = document.getElementById('transparency');
+
+const exaggerationValueSpan = document.getElementById('exaggerationValue');
+const exaggerationInput = document.getElementById('exaggeration');
+
 transparencyValueSpan.innerHTML =`${transparencyInput.value / 10} `;
+exaggerationValueSpan.innerHTML =`${exaggerationInput.value /10} `;
+
+let heightexaggeration = parseFloat(exaggerationInput.value/10);
 
 // const MAPTILER_KEY = 'get_your_own_OpIi9ZULNHzrESv6T2vL';
 const MAPTILER_KEY = 'fh40KwnIDXcNE7AwKtkT';
@@ -118,28 +133,35 @@ map.on('load', () => {
             
  //               'fill-extrusion-opacity': 0.7,
                 'fill-extrusion-opacity': zopacity,               
-                'fill-extrusion-height': ['get', 'height'],
+                'fill-extrusion-height': ['*',['get', 'height'],heightexaggeration],
+                'fill-extrusion-vertical-gradient':true
             },
 
         },
     );
 //     console.log(layer.length)
-
+    map.setLight({
+        intensity: 0.8,
+    });
 
 });
 
-
-
-
-
-
-transparencyInput.addEventListener('change', (e) => {
-    transparencyValueSpan.innerHTML =`${transparencyInput.value / 10} `;
+transparencyInput.addEventListener('input', () => {
+    transparencyValueSpan.innerHTML =`${transparencyInput.value / 10} `; 
     zopacity=parseFloat(transparencyInput.value/10);
-    map.setPaintProperty('z_city-distance','fill-extrusion-opacity',zopacity);
+        if (map && map.getLayer('z_city-distance')){
+        map.setPaintProperty('z_city-distance','fill-extrusion-opacity',zopacity);
+        }
+    }
+);
+exaggerationInput.addEventListener('input', () => {
+    heightexaggeration = parseFloat(exaggerationInput.value/10);
+    exaggerationValueSpan.innerHTML =`${exaggerationInput.value /10} `;
+    if (map && map.getLayer('z_city-distance')){
+        map.setPaintProperty('z_city-distance','fill-extrusion-height',['*',['get', 'height'],heightexaggeration]);
+    }
     },
 );
-
 </script>
 </body>
 </html>
